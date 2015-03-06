@@ -73,10 +73,10 @@ public class IntentFilterUtil {
         Collection<ResolveInfo> matchingResInfo = findMatchingResolveInfo(pm, messageIntent, lookupPackages);
 
         if (!matchingResInfo.isEmpty()) {
-            List<LabeledIntent> intentList = new ArrayList<>();
             if (matchingResInfo.size() == 1) {
                 messageIntent.setPackage(matchingResInfo.iterator().next().activityInfo.packageName);
             } else {
+                List<LabeledIntent> intentList = new ArrayList<>();
                 for (ResolveInfo resolveInfo : matchingResInfo) {
                     Intent intent = new Intent(messageIntent);
                     ActivityInfo activityInfo = resolveInfo.activityInfo;

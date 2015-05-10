@@ -1,0 +1,21 @@
+# IntelliJ
+.idea/
+*.iml
+
+# heap dump directory
+/captures
+
+# Gradle
+.gradle/
+gradle/wrapper/*.jar
+local.properties
+
+# Build output.
+build/
+
+# Windows thumbnails file
+Thumbs.db
+
+# Mac clutter
+.DS_Store
+

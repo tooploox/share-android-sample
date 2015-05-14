@@ -15,41 +15,95 @@ limitations under the License.
  */
 package com.tooploox.training.sample.sharingexample.activity;
 
+import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 
 import com.tooploox.training.sample.sharingexample.R;
+import com.tooploox.training.sample.sharingexample.util.IntentFilterUtil;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 
 public class MainActivity extends AppCompatActivity {
+
+
+    EditText etSubject;
+    EditText etMessage;
+    Button btnEmail;
+    Button btnMessage;
+    Button btnAll;
+
+    // This is quite lazy way of implementing listener, but I hate to use onClick from XML
+    // and this way keeps only one instance of OnClickListener object.
+    // In production apps we're using ButterKnife, but for sample it's overkill.
+    private View.OnClickListener onClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.btn_email:
+                    onEmailClicked();
+                    break;
+                case R.id.btn_message:
+                    onMessageClicked();
+                    break;
+                case R.id.btn_all:
+                    onAllClicked();
+                    break;
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        etSubject = (EditText) findViewById(R.id.et_subject);
+        etMessage = (EditText) findViewById(R.id.et_message);
+        btnEmail = (Button) findViewById(R.id.btn_email);
+        btnMessage = (Button) findViewById(R.id.btn_message);
+        btnAll = (Button) findViewById(R.id.btn_all);
+
+        btnEmail.setOnClickListener(onClickListener);
+        btnMessage.setOnClickListener(onClickListener);
+        btnAll.setOnClickListener(onClickListener);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    private Intent getMessageIntent() {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.putExtra(Intent.EXTRA_SUBJECT, etSubject.getText().toString());
+        intent.putExtra(Intent.EXTRA_TEXT, etMessage.getText().toString());
+        intent.setType("text/plain");
+        return intent;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+    private void onAllClicked() {
+        Intent messageIntent = getMessageIntent();
+        Collection<ResolveInfo> allMatching = IntentFilterUtil.findAllMatching(getPackageManager(), messageIntent);
+        startCustomPicker(messageIntent, allMatching);
+    }
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+    private void onMessageClicked() {
+        Intent messageIntent = getMessageIntent();
+        Collection<ResolveInfo> allMatching = IntentFilterUtil.findMatchingMessage(getPackageManager(), messageIntent);
+        startCustomPicker(messageIntent, allMatching);
+    }
 
-        return super.onOptionsItemSelected(item);
+    private void onEmailClicked() {
+        Intent messageIntent = getMessageIntent();
+        Collection<ResolveInfo> allMatching = IntentFilterUtil.findMatchingEmail(getPackageManager(), messageIntent);
+        startCustomPicker(messageIntent, allMatching);
+    }
+
+    private void startCustomPicker(Intent messageIntent, Collection<ResolveInfo> allMatching) {
+        Intent shareIntent = new Intent(this, CustomShareActivity.class);
+        shareIntent.putExtra(CustomShareActivity.MESSAGE_INTENT_EXTRA, messageIntent);
+        shareIntent.putParcelableArrayListExtra(CustomShareActivity.APPS_LIST_EXTRA, new ArrayList<>(allMatching));
+        startActivity(shareIntent);
     }
 }

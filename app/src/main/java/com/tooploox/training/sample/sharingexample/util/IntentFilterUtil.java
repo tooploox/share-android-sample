@@ -98,15 +98,26 @@ public class IntentFilterUtil {
         return IntentFilterUtil.filterSendAction(pm, intent, MSG_PACKAGES);
     }
 
-    private static Collection<ResolveInfo> findMatchingResolveInfo(PackageManager pm, Intent messageIntent, String... lookupPackages) {
-        List<ResolveInfo> resInfo = pm.queryIntentActivities(messageIntent, 0);
+    public static Collection<ResolveInfo> findMatchingEmail(PackageManager pm, Intent messageIntent) {
+        return findMatchingResolveInfo(pm, messageIntent, EMAIL_PACKAGES);
+    }
+
+    public static Collection<ResolveInfo> findMatchingMessage(PackageManager pm, Intent messageIntent) {
+        return findMatchingResolveInfo(pm, messageIntent, MSG_PACKAGES);
+    }
+
+    public static Collection<ResolveInfo> findAllMatching(PackageManager pm, Intent messageIntent) {
+        return pm.queryIntentActivities(messageIntent, 0);
+    }
+
+    static Collection<ResolveInfo> findMatchingResolveInfo(PackageManager pm, Intent messageIntent, String... lookupPackages) {
+        Collection<ResolveInfo> resInfo = findAllMatching(pm, messageIntent);
         Collection<ResolveInfo> matchingResInfo = new HashSet<>(resInfo.size());
-        for (int i = 0; i < resInfo.size(); i++) {
-            ResolveInfo ri = resInfo.get(i);
-            String packageName = ri.activityInfo.packageName;
+        for (ResolveInfo resolveInfo : resInfo) {
+            String packageName = resolveInfo.activityInfo.packageName;
             for (String lookupPackage : lookupPackages) {
                 if (packageName.contains(lookupPackage)) {
-                    matchingResInfo.add(ri);
+                    matchingResInfo.add(resolveInfo);
                     break;
                 }
             }

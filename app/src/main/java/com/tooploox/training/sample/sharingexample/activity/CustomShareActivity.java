@@ -20,32 +20,47 @@ import java.util.List;
 
 public class CustomShareActivity extends AppCompatActivity {
 
+    public interface OnItemClickListener {
+        void onClick(ResolveInfo pickedAppInfo);
+    }
+
     private static class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.Holder> {
 
-        protected static class Holder extends RecyclerView.ViewHolder {
+        protected class Holder extends RecyclerView.ViewHolder implements View.OnClickListener {
             ImageView ivIcon;
             TextView tvAppName;
 
-            public Holder(View itemView) {
+            OnItemClickListener itemClickListener;
+
+            public Holder(View itemView, OnItemClickListener itemClickListener) {
                 super(itemView);
                 ivIcon = (ImageView) itemView.findViewById(R.id.iv_icon);
                 tvAppName = (TextView) itemView.findViewById(R.id.tv_app_name);
+                itemView.setOnClickListener(this);
+                this.itemClickListener = itemClickListener;
+            }
+
+            @Override
+            public void onClick(View v) {
+                itemClickListener.onClick(apps.get(getPosition()));
             }
         }
 
-        Context context;
-        LayoutInflater inflater;
-        List<ResolveInfo> apps;
+        private final Context context;
+        private final LayoutInflater inflater;
+        private final List<ResolveInfo> apps;
+        private final OnItemClickListener itemClickListener;
 
-        ShareAdapter(Context context, List<ResolveInfo> apps) {
+        ShareAdapter(Context context, List<ResolveInfo> apps, OnItemClickListener itemClickListener) {
             this.context = context;
             this.inflater = LayoutInflater.from(context);
             this.apps = apps;
+            this.itemClickListener = itemClickListener;
         }
 
         @Override
         public Holder onCreateViewHolder(ViewGroup viewGroup, int itemIndex) {
-            return new Holder(inflater.inflate(R.layout.share_item, viewGroup, false));
+            return new Holder(inflater.inflate(R.layout.share_item, viewGroup, false), itemClickListener);
         }
 
         @Override
@@ -82,8 +97,16 @@ public class CustomShareActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
+        OnItemClickListener clickListener = new OnItemClickListener() {
+            @Override
+            public void onClick(ResolveInfo pickedAppInfo) {
+                messageIntent.setPackage(pickedAppInfo.activityInfo.packageName);
+                startActivity(messageIntent);
+            }
+        };
+
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         rvShareApps.setLayoutManager(layoutManager);
-        rvShareApps.setAdapter(new ShareAdapter(this, apps));
+        rvShareApps.setAdapter(new ShareAdapter(this, apps, clickListener));
     }
 }
